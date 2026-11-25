@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="인증과 인가 Excalidraw 학습 노트">
+  <title>인증과 인가 | IT 학습 기록</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <style>
+    main { max-width: 920px; }
+    .board, .storage, .lower, .pair {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
+    .board > .panel, .lower > .panel { padding: clamp(16px, 4vw, 32px); }
+    .board h2, .board h3, .board h4 { margin: 0 0 12px; }
+    .board ul { padding-inline-start: 1.35em; list-style-type: disc; line-height: 1.6; }
+    .board ul ul { margin-top: .55em; list-style-type: circle; }
+    .board ul ul ul { list-style-type: square; }
+    .board ul > li + li { margin-top: .75em; }
+    .board ul > li::marker { color: var(--accent); }
+    .note {
+      padding: clamp(14px, 3vw, 22px);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg);
+    }
+    .note :last-child { margin-bottom: 0; }
+    .note h3, .note h4 { color: var(--accent); }
+    .context { margin-bottom: 18px; }
+    .inline-note {
+      display: block;
+      margin-top: .2em;
+      color: #646b6e;
+      font-size: .8125em;
+      line-height: 1.5;
+    }
+    .subtopics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .subtopic {
+      padding: clamp(12px, 2vw, 18px);
+      border: 1px solid var(--line);
+      border-inline-start: 3px solid var(--accent);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+    .board .subtopic h4 { color: var(--ink); font-size: 1rem; }
+    .comparison-scroll { overflow-x: auto; }
+    .comparison-scroll table { display: table; width: 100%; min-width: 30rem; }
+    .comparison-scroll th, .comparison-scroll td { padding: 10px; vertical-align: top; }
+    .board .jwt-parts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding: 0;
+      list-style: none;
+    }
+    .board .jwt-parts li {
+      margin: 0;
+      padding: 6px 3px;
+      text-align: center;
+      background: #dcece7;
+      border-radius: 6px;
+    }
+    .board code { padding: .08em .25em; border-radius: 4px; background: #e3eeeb; }
+    .references { font-size: .92rem; }
+  </style>
+</head>
+<body>
+<main>
+  <nav aria-label="탐색">
+    <a href="../../index.html">전체 목록</a> /
+    <a href="index.html">보안</a> /
+    <a href="../../sources/security/authentication-authorization.excalidraw">Excalidraw 원본</a>
+  </nav>
+  <header><h1>인증과 인가</h1></header>
+  <article class="board">
+    <section class="panel">
+      <h2>쿠키 / 세션 / 토큰?</h2>
+      <ul><li>왜인지는 모르겠으나, 인터넷 상에서 쿠키, 세션, 토큰을 동일 위계에 놓고 비교하는 포스팅이 많음.</li><li>실제 위계를 생각해보면, 아래와 같이 나누는 것이 더 적절함.<ul><li>(<strong>인증 방식에 따른 분류</strong>) 세션 기반 인증(세션 ID) / 토큰 기반 인증(JWT)</li><li>(<strong>저장 수단에 따른 분류</strong>) 쿠키 / 웹스토리지 / 메모리</li><li>(<strong>전달 수단에 따른 분류</strong>) Cookie 헤더 / Authorization 헤더</li></ul></li></ul>
+    </section>
+    <section class="panel">
+      <h2>저장 수단별 특징</h2>
+      <div class="storage">
+        <div class="note"><h3>메모리</h3><ul><li>메모리를 사용하는 방식으로도 토큰(세션ID) 보유 가능</li><li>단, 페이지 이동 시 데이터 보존이 안됨. 단, SPA 구조에서는 페이지가 유지되므로 사용하기도 함.<span class="inline-note">이 경우, 새로고침 시 데이터 보존이 안됨.</span></li><li>SPA 구조에서는 오히려 적절한 시간 후에 휘발된다는 점을 역이용하여 Access Token을 메모리에 보관하고, Refresh Token을 쿠키에 보관하는 방식을 채택하기도 함<span class="inline-note">탈취할 토큰 자체가 없어진다는 것이 보안에 유리</span></li><li>XSS 위협이 존재하나, 표준 API를 통해 쉽게 읽을 수 있는 WebStorage에 비해 탈취가 상대적으로 어려움.</li></ul></div>
+        <div class="note"><h3>cookie</h3><ul><li>서버에서 클라이언트에게 전송하는 데이터</li><li>서버에서 응답 헤더에 <code>Set-Cookie: &lt;k&gt;=&lt;v&gt;</code> 형태로 제공</li><li>클라이언트는 헤더에 <code>Cookie: &lt;k1&gt;=&lt;v1&gt;;&lt;k2&gt;=&lt;v2&gt;</code> 형태로 매번 요청에 들어감.</li><li>문자열로만 저장 가능하며, 최대 4kb 제한</li><li>(<strong>스니핑 위협 존재</strong>) secure 플래그로 의도치 않은 HTTP 요청에 대해 쿠키 미발송</li><li>(<strong>XSS 위협 존재</strong>) HttpOnly 플래그로 브라우저에서 실행되는 JavaScript가 쿠키에 접근하지 못하도록 방지 </li><li>(<strong>CSRF 위협 존재</strong>) SameSite 플래그로 다른 Origin(도메인)의 요청은 쿠키 미발송</li></ul>
+          <div class="subtopics"><div class="subtopic"><h4>Session cookie</h4><ul><li>웹브라우저 종료 시 제거</li></ul></div><div class="subtopic"><h4>Persistent cookie</h4><ul><li>영구적으로 유지되는 쿠키.</li><li>Expires로 만료시간을 지정 가능.</li><li>Max-Age로 유지기간을 지정 가능.</li></ul></div></div>
+        </div>
+        <div class="note"><h3>Web Storage</h3><ul><li>HTML5에서 제공하는 저장소 API</li><li>OS 파일 시스템 위에 데이터베이스로 저장됨<span class="inline-note">firefox의 경우 SQLite</span></li><li>(Origin, Key, Value) 테이블 구조를 가져, Origin(도메인)별로 저장됨.</li><li>문자열로만 저장 가능하며, 보통 최대 5mb 제한<span class="inline-note">단, 객체나 배열을 <code>JSON.stringify()</code>로 변환하여 문자열로 저장 가능</span></li><li>(<strong>XSS 위협 존재</strong>) JavaScript로 읽어야 하는 구조 상 XSS에 취약함. 단, DOM 조작 API 중 <code>innerHTML</code>이 아닌 <code>textContent</code>를 사용하여 안전하게 문자열을 렌더링하는 방식으로 방지 가능<span class="inline-note">React.js 등 프레임워크는 기본적으로 이런 방식이 기본값</span></li><li>(<strong>CSRF 위협 없음</strong>) 쿠키처럼 자동 전송이 아닌, 로컬에서 직접 토큰(세션ID)을 얻어서 Authorization 헤더에 넣는 방식이므로 안전.</li></ul>
+          <div class="subtopics"><div class="subtopic"><h4>Local Storage</h4><ul><li>도메인에 종속됨</li><li>영구적이므로 직접 삭제해야 함.</li></ul></div><div class="subtopic"><h4>Session Storage</h4><ul><li>도메인에 종속됨</li><li>현재 세션(탭)에도 종속됨. 다른 탭에서 열면 두 세션 스토리지에서 읽는 값은 달라짐</li><li>세션을 종료하면 삭제됨</li></ul></div></div>
+        </div>
+      </div>
+    </section>
+    <div class="lower">
+      <section class="panel">
+        <h2 id="storage-comparison">저장 수단별 비교</h2>
+        <div class="comparison-scroll" role="region" aria-labelledby="storage-comparison" tabindex="0">
+          <table aria-labelledby="storage-comparison">
+            <thead>
+              <tr><th scope="col">비교 항목</th><th scope="col">Cookie</th><th scope="col">Web Storage</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">기간</th><td>기간 설정 가능</td><td>기간 설정 불가</td></tr>
+              <tr><th scope="row">저장 위치</th><td>로컬 저장소에 저장</td><td>로컬 저장소에 저장</td></tr>
+              <tr><th scope="row">발송 방식</th><td>서버에서 제공하면 자동으로 헤더에 첨부</td><td>서버에서 제공하면 클라이언트가 따로 첨부</td></tr>
+              <tr><th scope="row">저장 방식</th><td>4kb 제한 문자열</td><td>5mb 제한 문자열<span class="inline-note">객체, 배열을 stringify로 저장 가능</span></td></tr>
+              <tr><th scope="row">부분 발송 여부</th><td>항상 쿠키 전체 전송</td><td>원하는 데이터만 전송 가능</td></tr>
+              <tr><th scope="row">이벤트 발생 여부</th><td>이벤트 없음</td><td>데이터에 조작을 가하면 이벤트 발생</td></tr>
+              <tr><th scope="row">보안 관련</th><td>플래그로 CSRF, XSS 등 방지 가능</td><td>CSRF로부터 안전, XSS에 취약</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>인증 방식별 특징</h2>
+        <ul class="context"><li>최초 로그인은 ID/PW를 통해 진행하지만, 민감한 정보(ID/PW)의 보호를 위해 이후 단계에서는 민감 정보 대신 세션ID 혹은 토큰을 사용한다.</li><li>세션 ID나 토큰에 유효기간을 부여하여 탈취가 되더라도 공격할 수 있는 시간을 제한시킨다.</li></ul>
+        <div class="pair">
+          <div class="note"><h3>세션 기반 인증</h3><ul><li>서버의 DB에서 관리하는 고유한 ID인 세션ID를 클라이언트에게 제공</li><li>서버가 세션ID를 Key로 저장하고, 그 외 정보를 Value로 저장하는 K-V 구조</li><li>매번 서버 DB서버에 확인 요청을 날려야 하므로 서버에 부하를 일으킴<span class="inline-note">Stateful</span></li></ul></div>
+          <div class="note">
+            <h3>토큰 기반 인증</h3><ul><li>서버가 고유한 토큰을 발급하여 클라이언트에게 제공</li><li>토큰 자체에 정보가 담겨서 서버가 따로 관리할 필요 없음<span class="inline-note">Stateless</span></li><li>서버는 토큰이 변조되었는지 검증하는 절차만 가짐</li><li>단, 토큰 자체의 길이가 길다는 단점이 있음</li></ul>
+            <div class="subtopics">
+              <div class="subtopic">
+                <h4>JWT</h4>
+                <ol class="jwt-parts"><li>Header</li><li>Payload</li><li>Signature</li></ol>
+                <ul><li>(<strong>Header</strong>) 토큰의 형식과 서명 알고리즘<span class="inline-note">암호화가 안됨</span></li><li>(<strong>Payload</strong>) 사용자 및 인증·인가 정보<span class="inline-note">암호화가 안됨</span></li><li>(<strong>Signature</strong>) Header와 Payload의 무결성 및 서명자 검증. 서버의 비밀키가 없으면 복호화 불가.</li></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <section class="panel references">
+      <h2>참고 문헌</h2>
+      <ul><li>https://inpa.tistory.com/entry/WEB-📚-JWTjson-web-token-란-💯-정리#</li><li>https://inpa.tistory.com/entry/JS-📚-localStorage-sessionStorage#</li><li>https://lurgi.tistory.com/192</li><li>https://velog.io/@bluemistmark/로컬-스토리지의-데이터는-실제로-어디에-저장될까</li><li>https://yozm.wishket.com/magazine/detail/3317/</li><li>https://www.inflearn.com/community/questions/1726720/로컬스토리지-토큰-저장-시-보안문제?srsltid=AYCX9vLYt8sg1xNOeFmYiSIsWExiJJbIiFgo-TFkMVobJJ5clyrwUEP5</li><li>https://rutgo-letsgo.tistory.com/entry/Refresh-Token은-쿠키-Access-Token은-메모리에</li><li>https://velog.io/@aaronddy/인증Authentication과-인가Authorization</li></ul>
+    </section>
+  </article>
+  <footer>IT 학습 기록</footer>
+</main>
+</body>
+</html>
