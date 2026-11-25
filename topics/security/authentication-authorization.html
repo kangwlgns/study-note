@@ -122,9 +122,9 @@
         <h2>인증 방식별 특징</h2>
         <ul class="context"><li>최초 로그인은 ID/PW를 통해 진행하지만, 민감한 정보(ID/PW)의 보호를 위해 이후 단계에서는 민감 정보 대신 세션ID 혹은 토큰을 사용한다.</li><li>세션 ID나 토큰에 유효기간을 부여하여 탈취가 되더라도 공격할 수 있는 시간을 제한시킨다.</li></ul>
         <div class="pair">
-          <div class="note"><h3>세션 기반 인증</h3><ul><li>서버의 DB에서 관리하는 고유한 ID인 세션ID를 클라이언트에게 제공</li><li>서버가 세션ID를 Key로 저장하고, 그 외 정보를 Value로 저장하는 K-V 구조</li><li>매번 서버 DB서버에 확인 요청을 날려야 하므로 서버에 부하를 일으킴<span class="inline-note">Stateful</span></li></ul></div>
+          <div class="note"><h3>세션 기반 인증</h3><ul><li>서버의 DB에서 관리하는 고유한 ID인 세션ID를 클라이언트에게 제공</li><li>서버가 세션ID를 Key로 저장하고, 그 외 정보를 Value로 저장하는 K-V 구조</li><li>인증 상태에 대한 통제권이 있음<span class="inline-note">즉시 세션ID를 삭제하여 차단 가능</span></li><li>구현 및 관리가 간단함.</li><li>매번 서버 DB에 확인 요청을 날려야 하므로 서버에 부하를 일으킴.</li><li>MSA처럼 서버가 분산된 경우, 별도로 서버별 세션 공유 처리 작업 필요.</li><span class="inline-note">Stateful</span></ul></div>
           <div class="note">
-            <h3>토큰 기반 인증</h3><ul><li>서버가 고유한 토큰을 발급하여 클라이언트에게 제공</li><li>토큰 자체에 정보가 담겨서 서버가 따로 관리할 필요 없음<span class="inline-note">Stateless</span></li><li>서버는 토큰이 변조되었는지 검증하는 절차만 가짐</li><li>단, 토큰 자체의 길이가 길다는 단점이 있음</li></ul>
+            <h3>토큰 기반 인증</h3><ul><li>서버가 고유한 토큰을 발급하여 클라이언트에게 제공</li><li>서버는 토큰이 변조되었는지 검증하는 절차만 가짐</li><li>토큰 만료 전까지는 통제권이 없음</li><li>세션에 비해 비교적 관리가 어려움</li><li>토큰 자체의 길이가 길다는 단점이 있음</li><li>토큰 자체에 정보가 담겨서 서버가 따로 관리할 필요 없음<span class="inline-note">Stateless</span></li></ul>
             <div class="subtopics">
               <div class="subtopic">
                 <h4>JWT</h4>
